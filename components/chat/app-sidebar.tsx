@@ -32,6 +32,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,6 +50,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
   const { setOpenMobile, toggleSidebar } = useSidebar();
   const { mutate } = useSWRConfig();
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
+  useKeyboardShortcuts();
 
   const closeMobile = useCallback(() => {
     setOpenMobile(false);
@@ -125,10 +127,13 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                   <SidebarMenuButton
                     className="h-8 rounded-lg border border-sidebar-border text-[13px] text-sidebar-foreground/70 transition-colors duration-150 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                     onClick={handleNewChat}
-                    tooltip="New Chat"
+                    tooltip="New Chat (Ctrl+Shift+O)"
                   >
                     <PenSquareIcon className="size-4" />
                     <span className="font-medium">New chat</span>
+                    <kbd className="pointer-events-none ml-auto hidden rounded border border-sidebar-border bg-sidebar-accent/60 px-1.5 py-0.5 text-[10px] font-medium text-sidebar-foreground/50 md:inline-block">
+                      Ctrl+Shift+O
+                    </kbd>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 {user ? (

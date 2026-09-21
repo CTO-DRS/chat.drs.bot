@@ -24,9 +24,7 @@ test.describe("Model Selector", () => {
     const searchInput = page.getByPlaceholder("Search models...");
     await searchInput.fill("GLM");
 
-    await expect(
-      page.getByRole("option", { name: "GLM-4.6" })
-    ).toBeVisible();
+    await expect(page.getByRole("option", { name: "GLM-4.6" })).toBeVisible();
   });
 
   test("can close model selector by clicking outside", async ({ page }) => {

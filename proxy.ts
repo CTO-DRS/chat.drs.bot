@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { guestRegex } from "./lib/constants";
 import { shouldUseSecureCookies } from "./lib/auth-utils";
+import { guestRegex } from "./lib/constants";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -11,6 +11,11 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname.startsWith("/api/auth")) {
+    return NextResponse.next();
+  }
+
+  // Health check endpoint must stay public for Docker/orchestrator probes
+  if (pathname.startsWith("/api/health")) {
     return NextResponse.next();
   }
 

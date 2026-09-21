@@ -2,9 +2,10 @@
 
 import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 import { motion } from "framer-motion";
+import { SearchIcon, XIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { User } from "next-auth";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWRInfinite from "swr/infinite";
 import {
@@ -102,6 +103,8 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
   const id = pathname?.startsWith("/chat/") ? pathname.split("/")[2] : null;
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const {
     data: paginatedChatHistories,
@@ -164,6 +167,46 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
       setSize((size) => size + 1);
     }
   }, [hasReachedEnd, isValidating, setSize]);
+
+  const allChats = useMemo(
+    () =>
+      paginatedChatHistories
+        ? paginatedChatHistories.flatMap((page) => page.chats)
+        : [],
+    [paginatedChatHistories]
+  );
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const isSearching = normalizedQuery.length > 0;
+  const filteredChats = useMemo(
+    () =>
+      isSearching
+        ? allChats.filter((chat) =>
+            chat.title.toLowerCase().includes(normalizedQuery)
+          )
+        : allChats,
+    [allChats, isSearching, normalizedQuery]
+  );
+
+  useEffect(() => {
+    const handleFocusSearch = () => {
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener("drs:focus-chat-search", handleFocusSearch);
+    return () =>
+      window.removeEventListener("drs:focus-chat-search", handleFocusSearch);
+  }, []);
+
+  const handleSearchChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchQuery(event.target.value);
+    },
+    []
+  );
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+  }, []);
 
   if (!user) {
     return (
@@ -228,14 +271,41 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
           History
         </SidebarGroupLabel>
         <SidebarGroupContent>
+          <div className="relative mb-2 px-1">
+            <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-3.5 -translate-y-1/2 text-sidebar-foreground/40" />
+            <input
+              aria-label="Search chats"
+              className="h-8 w-full rounded-lg border border-sidebar-border bg-background/60 pl-8 pr-7 text-[13px] text-sidebar-foreground outline-none transition-colors placeholder:text-sidebar-foreground/40 focus:border-sidebar-foreground/30 focus:bg-background"
+              data-testid="chat-search-input"
+              onChange={handleSearchChange}
+              placeholder="Search chats..."
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+            />
+            {isSearching ? (
+              <button
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 transition-colors hover:text-sidebar-foreground"
+                onClick={handleClearSearch}
+                type="button"
+              >
+                <XIcon className="size-3.5" />
+              </button>
+            ) : null}
+          </div>
           <SidebarMenu>
             {paginatedChatHistories
               ? (() => {
-                  const chatsFromHistory = paginatedChatHistories.flatMap(
-                    (paginatedChatHistory) => paginatedChatHistory.chats
-                  );
+                  const groupedChats = groupChatsByDate(filteredChats);
 
-                  const groupedChats = groupChatsByDate(chatsFromHistory);
+                  if (isSearching && filteredChats.length === 0) {
+                    return (
+                      <div className="flex w-full flex-row items-center justify-center gap-2 px-2 py-6 text-[13px] text-sidebar-foreground/60">
+                        No chats matching “{searchQuery.trim()}”
+                      </div>
+                    );
+                  }
 
                   return (
                     <div className="flex flex-col gap-4">

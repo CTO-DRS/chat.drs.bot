@@ -6,8 +6,18 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "drs.bot",
+  },
   description:
     "chat.drs.bot — AI chat with artifacts, documents and code generation.",
+  icons: {
+    apple: "/apple-touch-icon.png",
+    icon: [{ type: "image/png", url: "/icon-192.png" }],
+  },
+  manifest: "/manifest.webmanifest",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
   ),
