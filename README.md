@@ -1,71 +1,151 @@
-<a href="https://chatbot.ai-sdk.dev/demo">
-  <img alt="Chatbot" src="app/(chat)/opengraph-image.png">
-  <h1 align="center">Chatbot</h1>
-</a>
+<div align="center">
 
-<p align="center">
-    Chatbot (formerly AI Chatbot) is a free, open-source template built with Next.js and the AI SDK that helps you quickly build powerful chatbot applications.
-</p>
+# 🤖 chat.drs.bot
 
-<p align="center">
-  <a href="https://chatbot.ai-sdk.dev/docs"><strong>Read Docs</strong></a> ·
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
-  <a href="#running-locally"><strong>Running locally</strong></a>
-</p>
-<br/>
+**منصة دردشة ذكاء اصطناعي متكاملة — DRS AI Chat Platform**
 
-## Features
+بُنيت بـ Next.js و AI SDK مع مزوّد Z.AI المخصص وقاعدة بيانات SQLite
 
-- [Next.js](https://nextjs.org) App Router
-  - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
-- [AI SDK](https://ai-sdk.dev/docs/introduction)
-  - Unified API for generating text, structured objects, and tool calls with LLMs
-  - Hooks for building dynamic chat and generative user interfaces
-  - Supports OpenAI, Anthropic, Google, xAI, and other model providers via AI Gateway
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
-- Data Persistence
-  - [Neon Serverless Postgres](https://vercel.com/marketplace/neon) for saving chat history and user data
-  - [Vercel Blob](https://vercel.com/storage/blob) for efficient file storage
-- [Auth.js](https://authjs.dev)
-  - Simple and secure authentication
+</div>
 
-## Model Providers
+---
 
-This template uses the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) to access multiple AI models through a unified interface. Models are configured in `lib/ai/models.ts` with per-model provider routing. Included models: Mistral, Moonshot, DeepSeek, OpenAI, and xAI.
+## 🇸🇦 نظرة عامة
 
-### AI Gateway Authentication
+**chat.drs.bot** هو تطبيق دردشة ذكاء اصطناعي متكامل (Full-stack) يدعم البث الفوري للردود، إنشاء المحتوى التفاعلي (Artifacts)، ومصادقة المستخدمين. المشروع مُكيَّف خصيصاً ليعمل مع مزوّد Z.AI المدمج وقاعدة بيانات SQLite محلية، مما يجعله خفيفاً وسهل النشر على أي خادم بدون الاعتماد على خدمات خارجية مدفوعة.
 
-**For Vercel deployments**: Authentication is handled automatically via OIDC tokens.
+### المميزات
 
-**For non-Vercel deployments**: You need to provide an AI Gateway API key by setting the `AI_GATEWAY_API_KEY` environment variable in your `.env.local` file.
+- 💬 **دردشة بالبث الفوري** — ردود لحظية متدفقة مع دعم استئناف المحادثات المقطوعة
+- 📄 **المحتوى التفاعلي (Artifacts)** — إنشاء مستندات نصية، محرر كود Python، جداول بيانات، وصور مولدة بالذكاء الاصطناعي
+- 🔐 **مصادقة مرنة** — دخول كضيف أو بالبريد الإلكتروني وكلمة المرور (Auth.js + bcrypt)
+- 🗄️ **تخزين محلي** — حفظ كامل للمحادثات والرسائل والتصويتات في SQLite عبر Drizzle ORM
+- 🧠 **مزوّد Z.AI المخصص** — تنفيذ `LanguageModelV4` متوافق مع OpenAI يدعم البث واستدعاء الأدوات والرؤية (تحليل الصور)
+- 🗳️ **تصويت الرسائل** — تقييم ردود المساعد لتحسين جودة المحادثات
+- ⚡ **اقتراحات ذكية** — أزرار اقتراحات جاهزة لبدء محادثات جديدة
+- 🐳 **جاهز للنشر** — صورة Docker مدمجة مع دعم وحدة تخزين لقاعدة البيانات
 
-With the [AI SDK](https://ai-sdk.dev/docs/introduction), you can also switch to direct LLM providers like [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://ai-sdk.dev/providers/ai-sdk-providers) with just a few lines of code.
+### التقنيات المستخدمة
 
-## Deploy Your Own
+| الطبقة | التقنية |
+|--------|---------|
+| الواجهة | Next.js App Router · React 19 · Tailwind CSS · shadcn/ui · Radix UI |
+| الذكاء الاصطناعي | AI SDK 7 · مزوّد Z.AI مخصص (`lib/ai/zai-provider.ts`) |
+| قاعدة البيانات | SQLite (better-sqlite3) · Drizzle ORM |
+| المصادقة | Auth.js (NextAuth v5) |
+| الاختبارات | Playwright |
 
-You can deploy your own version of Chatbot to Vercel with one click:
+### البدء السريع
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/templates/next.js/chatbot)
-
-## Running locally
-
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
-
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various AI and authentication provider accounts.
-
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
+**المتطلبات:** Node.js 20+ · pnpm أو bun
 
 ```bash
-pnpm install
-pnpm db:migrate # Setup database or apply latest database changes
+# 1) استنساخ المشروع
+git clone https://github.com/CTO-DRS/chat.drs.bot.git
+cd chat.drs.bot
+
+# 2) تثبيت الحزم
+pnpm install          # أو: bun install
+
+# 3) إعداد متغيرات البيئة
+cp .env.example .env.local
+# ثم عيّن قيمة AUTH_SECRET و DATABASE_PATH
+
+# 4) إنشاء جداول قاعدة البيانات
+pnpm db:push
+
+# 5) تشغيل خادم التطوير
 pnpm dev
 ```
 
-Your app template should now be running on [localhost:3000](http://localhost:3000).
+سيعمل التطبيق على [localhost:3000](http://localhost:3000) 🎉
+
+### متغيرات البيئة
+
+| المتغير | مطلوب | الوصف |
+|---------|-------|-------|
+| `AUTH_SECRET` | ✅ | مفتاح توقيع جلسات المصادقة (`openssl rand -base64 32`) |
+| `DATABASE_PATH` | ✅ | مسار ملف SQLite (الافتراضي: `db/drs-chat.db`) |
+| `NEXT_PUBLIC_BASE_PATH` | ➖ | مسار فرعي عند النشر داخل مجلد (مثل `/chat`) |
+
+> ⚠️ **تنبيه:** لا ترفع ملف `.env` أو `.env.local` إلى Git — فهما يحتويان على أسرار المصادقة.
+
+### النشر باستخدام Docker
+
+```bash
+# بناء الصورة
+docker build -t chat-drs-bot .
+
+# التشغيل مع حفظ قاعدة البيانات في وحدة تخزين دائمة
+docker run -d \
+  -p 3000:3000 \
+  -e AUTH_SECRET="$(openssl rand -base64 32)" \
+  -v drs-chat-data:/app/db \
+  --name drs-bot \
+  chat-drs-bot
+```
+
+### هيكل المشروع
+
+```
+chat.drs.bot/
+├── app/                    # صفحات التطبيق (دردشة، دخول، تسجيل)
+│   ├── (auth)/             # المصادقة: login · register · actions
+│   └── (chat)/             # واجهة الدردشة الرئيسية + API routes
+├── artifacts/              # المحتوى التفاعلي: نص · كود · جداول · صور
+├── components/             # مكونات واجهة المستخدم (shadcn/ui)
+├── lib/
+│   ├── ai/                 # مزوّد Z.AI · النماذج · الأدوات · الطلبات
+│   └── db/                 # مخطط Drizzle · استعلامات SQLite
+├── hooks/                  # React hooks مخصصة
+├── scripts/                # سكربتات فحص واختبار
+└── tests/                  # اختبارات Playwright الشاملة
+```
+
+### أوامر مفيدة
+
+| الأمر | الوظيفة |
+|-------|---------|
+| `pnpm dev` | تشغيل خادم التطوير على المنفذ 3000 |
+| `pnpm build` | بناء نسخة الإنتاج |
+| `pnpm db:generate` | توليد ملفات ترحيل Drizzle |
+| `pnpm db:push` | تطبيق المخطط على قاعدة البيانات |
+| `pnpm db:studio` | فتح Drizzle Studio لاستعراض البيانات |
+| `pnpm test` | تشغيل اختبارات Playwright |
+| `pnpm fix` | إصلاح مشاكل التنسيق تلقائياً (Biome) |
+
+---
+
+## 🇬🇧 Overview (English)
+
+**chat.drs.bot** is a full-stack AI chat application with streaming responses, interactive artifacts, and user authentication. It is adapted to run with a custom built-in Z.AI provider and a local SQLite database — lightweight, self-contained, and deployable on any server without external paid services.
+
+**Key features:** streaming chat with resume support · text/code/sheet/image artifacts · guest & email/password auth (Auth.js) · SQLite persistence via Drizzle ORM · custom OpenAI-compatible `LanguageModelV4` provider with streaming, tool calling & vision · message voting · suggested actions · production-ready Docker image with a database volume.
+
+**Quick start:**
+
+```bash
+pnpm install
+cp .env.example .env.local   # set AUTH_SECRET & DATABASE_PATH
+pnpm db:push
+pnpm dev                     # → http://localhost:3000
+```
+
+**Environment variables:** `AUTH_SECRET` (required, session signing key) · `DATABASE_PATH` (required, SQLite file path) · `NEXT_PUBLIC_BASE_PATH` (optional, sub-directory serving).
+
+**Docker:**
+
+```bash
+docker build -t chat-drs-bot .
+docker run -d -p 3000:3000 -e AUTH_SECRET="$(openssl rand -base64 32)" -v drs-chat-data:/app/db --name drs-bot chat-drs-bot
+```
+
+No AI gateway key, Postgres, Redis, or Blob storage required — the Z.AI provider (`lib/ai/zai-provider.ts`) and SQLite handle everything locally.
+
+---
+
+<div align="center">
+
+**DRS** · [github.com/CTO-DRS](https://github.com/CTO-DRS)
+
+</div>
