@@ -4,8 +4,8 @@ import path from "node:path";
 const UPLOAD_DIR = path.join(process.cwd(), "upload");
 
 const CONTENT_TYPES: Record<string, string> = {
-  ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
+  ".jpg": "image/jpeg",
   ".png": "image/png",
 };
 
@@ -36,8 +36,8 @@ export async function GET(
 
   return new Response(new Uint8Array(data), {
     headers: {
-      "Content-Type": contentType,
       "Cache-Control": "public, max-age=31536000, immutable",
+      "Content-Type": contentType,
     },
   });
 }

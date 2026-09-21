@@ -8,6 +8,9 @@ import { SessionProvider } from "next-auth/react";
 export const metadata: Metadata = {
   description:
     "chat.drs.bot — AI chat with artifacts, documents and code generation.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+  ),
   title: "chat.drs.bot",
 };
 
@@ -41,11 +44,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      className="antialiased"
-      lang="en"
-      suppressHydrationWarning
-    >
+    <html className="antialiased" lang="en" suppressHydrationWarning>
       <head>
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required"

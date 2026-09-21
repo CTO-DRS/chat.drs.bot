@@ -1,5 +1,8 @@
 import "server-only";
 
+import { mkdirSync } from "node:fs";
+import path from "node:path";
+import Database from "better-sqlite3";
 import {
   and,
   asc,
@@ -12,10 +15,7 @@ import {
   lt,
   type SQL,
 } from "drizzle-orm";
-import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
 import type { ArtifactKind } from "@/components/chat/artifact";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { ChatbotError } from "../errors";

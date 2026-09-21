@@ -5,8 +5,8 @@ async function testStreaming() {
   const zai = await ZAI.create();
   const body = {
     messages: [
-      { role: "assistant", content: "You are a helpful assistant." },
-      { role: "user", content: "قل مرحبا بالعربية في جملة قصيرة" },
+      { content: "You are a helpful assistant.", role: "assistant" },
+      { content: "قل مرحبا بالعربية في جملة قصيرة", role: "user" },
     ],
     stream: true,
     thinking: { type: "disabled" },
@@ -19,11 +19,16 @@ async function testStreaming() {
     let chunks = 0;
     let sample = "";
     while (true) {
+      // biome-ignore lint/performance/noAwaitInLoops: stream chunks must be read sequentially
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        break;
+      }
       const text = typeof value === "string" ? value : decoder.decode(value);
-      chunks++;
-      if (chunks <= 5) sample += text;
+      chunks += 1;
+      if (chunks <= 5) {
+        sample += text;
+      }
     }
     console.log("total chunks:", chunks);
     console.log("sample first chunks:\n", sample.slice(0, 1500));
@@ -37,36 +42,39 @@ async function testToolCalling() {
   const zai = await ZAI.create();
   const body = {
     messages: [
-      { role: "assistant", content: "You are a helpful assistant." },
-      { role: "user", content: "What is the weather like in San Francisco?" },
+      { content: "You are a helpful assistant.", role: "assistant" },
+      { content: "What is the weather like in San Francisco?", role: "user" },
     ],
+    thinking: { type: "disabled" },
+    tool_choice: "auto",
     tools: [
       {
-        type: "function",
         function: {
-          name: "getWeather",
           description: "Get the current weather for a location",
+          name: "getWeather",
           parameters: {
-            type: "object",
             properties: {
+              city: { type: "string" },
               latitude: { type: "number" },
               longitude: { type: "number" },
-              city: { type: "string" },
             },
             required: ["latitude", "longitude", "city"],
+            type: "object",
           },
         },
+        type: "function",
       },
     ],
-    tool_choice: "auto",
-    thinking: { type: "disabled" },
   };
   try {
     const completion = await zai.chat.completions.create(body);
     const msg = completion?.choices?.[0]?.message;
     console.log("finish_reason:", completion?.choices?.[0]?.finish_reason);
     console.log("content:", JSON.stringify(msg?.content)?.slice(0, 200));
-    console.log("tool_calls:", JSON.stringify(msg?.tool_calls, null, 2)?.slice(0, 800));
+    console.log(
+      "tool_calls:",
+      JSON.stringify(msg?.tool_calls, null, 2)?.slice(0, 800)
+    );
     console.log("usage:", JSON.stringify(completion?.usage));
   } catch (e) {
     console.log("tool call ERROR:", e?.message?.slice(0, 500));
@@ -78,29 +86,32 @@ async function testToolCallingStream() {
   const zai = await ZAI.create();
   const body = {
     messages: [
-      { role: "assistant", content: "You are a helpful assistant." },
-      { role: "user", content: "Create a document titled 'hello' with content 'world'" },
-    ],
-    tools: [
+      { content: "You are a helpful assistant.", role: "assistant" },
       {
-        type: "function",
-        function: {
-          name: "createDocument",
-          description: "Create a document",
-          parameters: {
-            type: "object",
-            properties: {
-              title: { type: "string" },
-              content: { type: "string" },
-            },
-            required: ["title", "content"],
-          },
-        },
+        content: "Create a document titled 'hello' with content 'world'",
+        role: "user",
       },
     ],
-    tool_choice: "auto",
     stream: true,
     thinking: { type: "disabled" },
+    tool_choice: "auto",
+    tools: [
+      {
+        function: {
+          description: "Create a document",
+          name: "createDocument",
+          parameters: {
+            properties: {
+              content: { type: "string" },
+              title: { type: "string" },
+            },
+            required: ["title", "content"],
+            type: "object",
+          },
+        },
+        type: "function",
+      },
+    ],
   };
   try {
     const result = await zai.chat.completions.create(body);
@@ -109,8 +120,11 @@ async function testToolCallingStream() {
       const decoder = new TextDecoder();
       let all = "";
       while (true) {
+        // biome-ignore lint/performance/noAwaitInLoops: stream chunks must be read sequentially
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          break;
+        }
         const text = typeof value === "string" ? value : decoder.decode(value);
         all += text;
       }
@@ -119,11 +133,17 @@ async function testToolCallingStream() {
       console.log("total SSE lines:", lines.length);
       const toolLines = lines.filter((l) => l.includes("tool_call"));
       console.log("tool_call lines:", toolLines.length);
-      console.log("sample tool lines:", toolLines.slice(0, 4).join("\n").slice(0, 1200));
+      console.log(
+        "sample tool lines:",
+        toolLines.slice(0, 4).join("\n").slice(0, 1200)
+      );
       console.log("---last 3 lines---");
       console.log(lines.slice(-3).join("\n").slice(0, 800));
     } else {
-      console.log("stream tool: non-stream result:", JSON.stringify(result).slice(0, 600));
+      console.log(
+        "stream tool: non-stream result:",
+        JSON.stringify(result).slice(0, 600)
+      );
     }
   } catch (e) {
     console.log("stream tool ERROR:", e?.message?.slice(0, 500));

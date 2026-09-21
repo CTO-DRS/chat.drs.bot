@@ -3,15 +3,15 @@
   "version": "3.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS=--max-old-space-size=2816 next dev -p 3000 2>&1 | tee dev.log",
     "build": "next build",
-    "start": "next start",
     "check": "ultracite check",
-    "fix": "ultracite fix",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "test": "export PLAYWRIGHT=True && pnpm exec playwright test"
+    "dev": "NODE_OPTIONS=--max-old-space-size=2816 next dev -p 3000 2>&1 | tee dev.log",
+    "fix": "ultracite fix",
+    "start": "next start",
+    "test": "export PLAYWRIGHT=True && npx playwright test"
   },
   "dependencies": {
     "@ai-sdk/provider": "^4.0.2",

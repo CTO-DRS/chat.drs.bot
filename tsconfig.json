@@ -31,5 +31,15 @@
     "next.config.js",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "tests", "db", "upload", "scripts", "download", "skills", "mini-services", "examples"]
+  "exclude": [
+    "node_modules",
+    "tests",
+    "db",
+    "upload",
+    "scripts",
+    "download",
+    "skills",
+    "mini-services",
+    "examples"
+  ]
 }

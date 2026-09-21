@@ -88,13 +88,17 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
 
-  /* Run your local dev server before starting the tests */
+  /* Run your local server before starting the tests.
+   * E2E_USE_PROD_SERVER=1 runs the suite against `next start` (requires a
+   * prior `next build`) — far lighter on memory, needed on 4GB machines
+   * where the Turbopack dev server plus a browser exceed available RAM. */
   webServer: {
-    command: "pnpm dev",
+    command:
+      process.env.E2E_USE_PROD_SERVER === "1" ? "npm run start" : "npm run dev",
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     url: `${baseURL}/ping`,
   },
-  /* Limit workers to prevent browser crashes */
-  workers: process.env.CI ? 2 : 2,
+  /* Limit workers to prevent browser crashes / OOM on 4GB environments */
+  workers: 1,
 });

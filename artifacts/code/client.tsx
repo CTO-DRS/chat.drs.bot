@@ -9,6 +9,7 @@ const CodeEditor = dynamic(
     })),
   { ssr: false }
 );
+
 import {
   Console,
   type ConsoleOutput,

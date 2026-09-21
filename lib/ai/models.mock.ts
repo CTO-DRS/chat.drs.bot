@@ -33,7 +33,7 @@ const createMockModel = (): LanguageModel =>
     defaultObjectGenerationMode: "tool",
     doGenerate: async ({ prompt }: { prompt: unknown }) => ({
       content: [{ text: getResponseForPrompt(prompt), type: "text" }],
-      finishReason: { unified: "stop", raw: "stop" },
+      finishReason: { raw: "stop", unified: "stop" },
       usage: mockUsage,
       warnings: [],
     }),
@@ -53,12 +53,14 @@ const createMockModel = (): LanguageModel =>
                 type: "text-delta",
               });
               await new Promise((resolve) => {
-                setTimeout(resolve, 10);
+                // ~80ms/word keeps the streaming window observable by e2e
+                // tests (e.g. the stop button) while staying fast overall.
+                setTimeout(resolve, 80);
               });
             }, Promise.resolve());
             controller.enqueue({ id: "t1", type: "text-end" });
             controller.enqueue({
-              finishReason: { unified: "stop", raw: "stop" },
+              finishReason: { raw: "stop", unified: "stop" },
               type: "finish",
               usage: mockUsage,
             });
@@ -78,7 +80,7 @@ const createMockTitleModel = (): LanguageModel =>
     defaultObjectGenerationMode: "tool",
     doGenerate: async () => ({
       content: [{ text: "Test Conversation", type: "text" }],
-      finishReason: { unified: "stop", raw: "stop" },
+      finishReason: { raw: "stop", unified: "stop" },
       usage: {
         inputTokens: { cacheRead: 0, cacheWrite: 0, noCache: 5, total: 5 },
         outputTokens: { reasoning: 0, text: 5, total: 5 },
@@ -96,7 +98,7 @@ const createMockTitleModel = (): LanguageModel =>
           });
           controller.enqueue({ id: "t1", type: "text-end" });
           controller.enqueue({
-            finishReason: { unified: "stop", raw: "stop" },
+            finishReason: { raw: "stop", unified: "stop" },
             type: "finish",
             usage: {
               inputTokens: {

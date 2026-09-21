@@ -11,6 +11,7 @@ import {
   RedoIcon,
   UndoIcon,
 } from "@/components/chat/icons";
+
 const Editor = dynamic(
   () =>
     import("@/components/chat/text-editor").then((mod) => ({
@@ -18,6 +19,7 @@ const Editor = dynamic(
     })),
   { ssr: false }
 );
+
 import type { Suggestion } from "@/lib/db/schema";
 import { getSuggestions } from "../actions";
 

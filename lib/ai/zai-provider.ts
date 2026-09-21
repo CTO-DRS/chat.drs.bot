@@ -1,4 +1,3 @@
-import ZAI from "z-ai-web-dev-sdk";
 import type {
   LanguageModelV4,
   LanguageModelV4CallOptions,
@@ -10,6 +9,7 @@ import type {
   LanguageModelV4StreamResult,
   LanguageModelV4Usage,
 } from "@ai-sdk/provider";
+import ZAI from "z-ai-web-dev-sdk";
 
 /**
  * Custom AI SDK LanguageModelV4 provider backed by z-ai-web-dev-sdk.
@@ -20,7 +20,7 @@ import type {
 
 type OpenAIMessage = {
   role: "system" | "user" | "assistant" | "tool";
-  content: string | null | Array<Record<string, unknown>>;
+  content: string | null | Record<string, unknown>[];
   tool_calls?: Array<{
     id: string;
     type: "function";
@@ -54,20 +54,22 @@ type OpenAIChunk = {
   } | null;
 };
 
-function mapFinishReason(raw: string | undefined | null): LanguageModelV4FinishReason {
+function mapFinishReason(
+  raw: string | undefined | null
+): LanguageModelV4FinishReason {
   switch (raw) {
     case "stop":
-      return { unified: "stop", raw: "stop" };
+      return { raw: "stop", unified: "stop" };
     case "length":
     case "max_tokens":
-      return { unified: "length", raw: raw ?? undefined };
+      return { raw: raw ?? undefined, unified: "length" };
     case "tool_calls":
     case "function_call":
-      return { unified: "tool-calls", raw: raw ?? undefined };
+      return { raw: raw ?? undefined, unified: "tool-calls" };
     case "content_filter":
-      return { unified: "content-filter", raw: raw ?? undefined };
+      return { raw: raw ?? undefined, unified: "content-filter" };
     default:
-      return { unified: "other", raw: raw ?? undefined };
+      return { raw: raw ?? undefined, unified: "other" };
   }
 }
 
@@ -76,24 +78,33 @@ function mapUsage(
 ): LanguageModelV4Usage {
   return {
     inputTokens: {
-      total: usage?.prompt_tokens,
-      noCache: usage?.prompt_tokens,
       cacheRead: 0,
       cacheWrite: 0,
+      noCache: usage?.prompt_tokens,
+      total: usage?.prompt_tokens,
     },
     outputTokens: {
-      total: usage?.completion_tokens,
-      text: usage?.completion_tokens,
       reasoning: 0,
+      text: usage?.completion_tokens,
+      total: usage?.completion_tokens,
     },
     ...(usage
-      ? { raw: { prompt_tokens: usage.prompt_tokens ?? 0, completion_tokens: usage.completion_tokens ?? 0, total_tokens: usage.total_tokens ?? 0 } }
+      ? {
+          raw: {
+            completion_tokens: usage.completion_tokens ?? 0,
+            prompt_tokens: usage.prompt_tokens ?? 0,
+            total_tokens: usage.total_tokens ?? 0,
+          },
+        }
       : {}),
   };
 }
 
 async function filePartToDataUrl(
-  part: Extract<LanguageModelV4Prompt[number]["content"][number], { type?: "file" }> & {
+  part: Extract<
+    LanguageModelV4Prompt[number]["content"][number],
+    { type?: "file" }
+  > & {
     type: "file";
   }
 ): Promise<string | null> {
@@ -103,7 +114,7 @@ async function filePartToDataUrl(
     return null;
   }
 
-  const data = part.data;
+  const { data } = part;
 
   if (data.type === "url") {
     const url = String(data.url);
@@ -148,23 +159,24 @@ async function convertPromptToMessages(
 
   for (const message of prompt) {
     if (message.role === "system") {
-      messages.push({ role: "system", content: message.content });
+      messages.push({ content: message.content, role: "system" });
       continue;
     }
 
     if (message.role === "user") {
-      const contentParts: Array<Record<string, unknown>> = [];
+      const contentParts: Record<string, unknown>[] = [];
       const textParts: string[] = [];
 
       for (const part of message.content) {
         if (part.type === "text") {
           textParts.push(part.text);
         } else if (part.type === "file") {
+          // biome-ignore lint/performance/noAwaitInLoops: sequential conversion preserves attachment ordering
           const dataUrl = await filePartToDataUrl(part);
           if (dataUrl) {
             contentParts.push({
-              type: "image_url",
               image_url: { url: dataUrl },
+              type: "image_url",
             });
           } else {
             textParts.push(
@@ -178,11 +190,11 @@ async function convertPromptToMessages(
 
       if (contentParts.length > 0) {
         for (const text of textParts) {
-          contentParts.push({ type: "text", text });
+          contentParts.push({ text, type: "text" });
         }
-        messages.push({ role: "user", content: contentParts });
+        messages.push({ content: contentParts, role: "user" });
       } else {
-        messages.push({ role: "user", content: textParts.join("\n") });
+        messages.push({ content: textParts.join("\n"), role: "user" });
       }
 
       continue;
@@ -197,22 +209,22 @@ async function convertPromptToMessages(
           text.push(part.text);
         } else if (part.type === "tool-call") {
           toolCalls.push({
-            id: part.toolCallId,
-            type: "function",
             function: {
-              name: part.toolName,
               arguments:
                 typeof part.input === "string"
                   ? part.input
                   : JSON.stringify(part.input ?? {}),
+              name: part.toolName,
             },
+            id: part.toolCallId,
+            type: "function",
           });
         }
       }
 
       messages.push({
-        role: "assistant",
         content: text.join("") || null,
+        role: "assistant",
         ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}),
       });
 
@@ -226,13 +238,11 @@ async function convertPromptToMessages(
         }
 
         let resultText = "";
-        const output = part.output;
+        const { output } = part;
 
         if (output && typeof output === "object" && "type" in output) {
           if (output.type === "text") {
-            resultText = String(
-              (output as { value?: unknown }).value ?? ""
-            );
+            resultText = String((output as { value?: unknown }).value ?? "");
           } else if (output.type === "json") {
             resultText = JSON.stringify(
               (output as { value?: unknown }).value ?? null
@@ -245,9 +255,9 @@ async function convertPromptToMessages(
         }
 
         messages.push({
+          content: resultText,
           role: "tool",
           tool_call_id: part.toolCallId,
-          content: resultText,
         });
       }
     }
@@ -258,22 +268,22 @@ async function convertPromptToMessages(
 
 function convertTools(
   options: LanguageModelV4CallOptions
-): Array<Record<string, unknown>> | undefined {
+): Record<string, unknown>[] | undefined {
   const tools = (options.tools ?? []).filter(
     (tool): tool is LanguageModelV4FunctionTool => tool.type === "function"
   );
 
   if (tools.length === 0) {
-    return undefined;
+    return;
   }
 
   return tools.map((tool) => ({
-    type: "function",
     function: {
-      name: tool.name,
       description: tool.description ?? "",
-      parameters: tool.inputSchema ?? { type: "object", properties: {} },
+      name: tool.name,
+      parameters: tool.inputSchema ?? { properties: {}, type: "object" },
     },
+    type: "function",
   }));
 }
 
@@ -281,7 +291,7 @@ function mapToolChoice(
   options: LanguageModelV4CallOptions
 ): string | undefined {
   if (!options.tools || options.tools.length === 0) {
-    return undefined;
+    return;
   }
 
   switch (options.toolChoice?.type) {
@@ -291,7 +301,6 @@ function mapToolChoice(
       return "required";
     case "tool":
       return "auto";
-    case "auto":
     default:
       return "auto";
   }
@@ -304,23 +313,22 @@ function createBodyBase(options: LanguageModelV4CallOptions, modelId: string) {
       message.role === "user" &&
       message.content.some(
         (part) =>
-          part.type === "file" &&
-          (part.mediaType ?? "").startsWith("image/")
+          part.type === "file" && (part.mediaType ?? "").startsWith("image/")
       )
   );
 
   return {
-    model: modelId,
-    max_tokens: options.maxOutputTokens,
-    temperature: options.temperature,
-    top_p: options.topP,
-    stop: options.stopSequences,
-    seed: options.seed,
-    tools: convertTools(options),
-    tool_choice: mapToolChoice(options),
-    thinking: { type: "disabled" as const },
     hasImages,
+    max_tokens: options.maxOutputTokens,
     messagesPromise,
+    model: modelId,
+    seed: options.seed,
+    stop: options.stopSequences,
+    temperature: options.temperature,
+    thinking: { type: "disabled" as const },
+    tool_choice: mapToolChoice(options),
+    tools: convertTools(options),
+    top_p: options.topP,
   };
 }
 
@@ -331,19 +339,23 @@ function buildToolCallId(index: number, existingId?: string): string {
 function createSSEStreamParser() {
   let buffer = "";
 
-  return function extractChunks(
-    text: string
-  ): { chunks: OpenAIChunk[]; done: boolean } {
+  return function extractChunks(text: string): {
+    chunks: OpenAIChunk[];
+    done: boolean;
+  } {
     buffer += text;
     const chunks: OpenAIChunk[] = [];
     let done = false;
 
-    let newlineIndex: number;
-    while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+    for (;;) {
+      const newlineIndex = buffer.indexOf("\n");
+      if (newlineIndex === -1) {
+        break;
+      }
       const line = buffer.slice(0, newlineIndex).trim();
       buffer = buffer.slice(newlineIndex + 1);
 
-      if (!line || !line.startsWith("data:")) {
+      if (!line?.startsWith("data:")) {
         continue;
       }
 
@@ -367,11 +379,6 @@ function createSSEStreamParser() {
 
 function createZAIModel(modelId: string): LanguageModelV4 {
   return {
-    specificationVersion: "v4",
-    provider: "zai",
-    modelId,
-    supportedUrls: {},
-
     async doGenerate(
       options: LanguageModelV4CallOptions
     ): Promise<LanguageModelV4GenerateResult> {
@@ -380,16 +387,16 @@ function createZAIModel(modelId: string): LanguageModelV4 {
       const zai = await ZAI.create();
 
       const body = {
-        model: base.model,
         max_tokens: base.max_tokens,
-        temperature: base.temperature,
-        top_p: base.top_p,
-        stop: base.stop,
-        seed: base.seed,
-        tools: base.tools,
-        tool_choice: base.tool_choice,
-        thinking: base.thinking,
         messages,
+        model: base.model,
+        seed: base.seed,
+        stop: base.stop,
+        temperature: base.temperature,
+        thinking: base.thinking,
+        tool_choice: base.tool_choice,
+        tools: base.tools,
+        top_p: base.top_p,
       };
 
       const completion = base.hasImages
@@ -402,16 +409,16 @@ function createZAIModel(modelId: string): LanguageModelV4 {
       const content: LanguageModelV4GenerateResult["content"] = [];
 
       if (message?.content) {
-        content.push({ type: "text", text: message.content });
+        content.push({ text: message.content, type: "text" });
       }
 
       if (Array.isArray(message?.tool_calls)) {
         for (const toolCall of message.tool_calls) {
           content.push({
-            type: "tool-call",
+            input: toolCall.function?.arguments ?? "{}",
             toolCallId: toolCall.id ?? `zai_tool_${content.length}`,
             toolName: toolCall.function?.name ?? "",
-            input: toolCall.function?.arguments ?? "{}",
+            type: "tool-call",
           });
         }
       }
@@ -432,17 +439,17 @@ function createZAIModel(modelId: string): LanguageModelV4 {
       const zai = await ZAI.create();
 
       const body = {
-        model: base.model,
         max_tokens: base.max_tokens,
-        temperature: base.temperature,
-        top_p: base.top_p,
-        stop: base.stop,
-        seed: base.seed,
-        tools: base.tools,
-        tool_choice: base.tool_choice,
-        thinking: base.thinking,
         messages,
+        model: base.model,
+        seed: base.seed,
+        stop: base.stop,
         stream: true,
+        temperature: base.temperature,
+        thinking: base.thinking,
+        tool_choice: base.tool_choice,
+        tools: base.tools,
+        top_p: base.top_p,
       };
 
       const upstream = base.hasImages
@@ -464,19 +471,19 @@ function createZAIModel(modelId: string): LanguageModelV4 {
           };
 
           let textStarted = false;
-          let textId = "t1";
+          const textId = "t1";
 
           const startText = () => {
             if (!textStarted) {
               textStarted = true;
-              controller.enqueue({ type: "text-start", id: textId });
+              controller.enqueue({ id: textId, type: "text-start" });
             }
           };
 
           const endText = () => {
             if (textStarted) {
               textStarted = false;
-              controller.enqueue({ type: "text-end", id: textId });
+              controller.enqueue({ id: textId, type: "text-end" });
             }
           };
 
@@ -485,14 +492,14 @@ function createZAIModel(modelId: string): LanguageModelV4 {
           const startReasoning = () => {
             if (!reasoningStarted) {
               reasoningStarted = true;
-              controller.enqueue({ type: "reasoning-start", id: "r1" });
+              controller.enqueue({ id: "r1", type: "reasoning-start" });
             }
           };
 
           const endReasoning = () => {
             if (reasoningStarted) {
               reasoningStarted = false;
-              controller.enqueue({ type: "reasoning-end", id: "r1" });
+              controller.enqueue({ id: "r1", type: "reasoning-end" });
             }
           };
 
@@ -513,15 +520,15 @@ function createZAIModel(modelId: string): LanguageModelV4 {
             for (const [, accumulator] of toolAccumulators) {
               if (accumulator.started) {
                 controller.enqueue({
-                  type: "tool-input-end",
                   id: accumulator.id,
+                  type: "tool-input-end",
                 });
               }
               controller.enqueue({
-                type: "tool-call",
+                input: accumulator.arguments || "{}",
                 toolCallId: accumulator.id,
                 toolName: accumulator.name,
-                input: accumulator.arguments || "{}",
+                type: "tool-call",
               });
             }
           };
@@ -531,8 +538,8 @@ function createZAIModel(modelId: string): LanguageModelV4 {
             endReasoning();
             emitFinalToolCalls();
             controller.enqueue({
-              type: "finish",
               finishReason: mapFinishReason(rawFinishReason ?? "stop"),
+              type: "finish",
               usage: mapUsage(rawUsage),
             });
             closeController();
@@ -543,13 +550,13 @@ function createZAIModel(modelId: string): LanguageModelV4 {
             const choice = (upstream as any)?.choices?.[0];
             const content = choice?.message?.content;
             if (typeof content === "string" && content.length > 0) {
-              controller.enqueue({ type: "text-start", id: textId });
+              controller.enqueue({ id: textId, type: "text-start" });
               controller.enqueue({
-                type: "text-delta",
-                id: textId,
                 delta: content,
+                id: textId,
+                type: "text-delta",
               });
-              controller.enqueue({ type: "text-end", id: textId });
+              controller.enqueue({ id: textId, type: "text-end" });
             }
             rawFinishReason = choice?.finish_reason ?? "stop";
             rawUsage = (upstream as any)?.usage;
@@ -563,12 +570,13 @@ function createZAIModel(modelId: string): LanguageModelV4 {
           try {
             while (true) {
               if (options.abortSignal?.aborted) {
+                // biome-ignore lint/performance/noAwaitInLoops: stream chunks must be read sequentially
                 await reader.cancel().catch(() => undefined);
                 endText();
                 endReasoning();
                 controller.enqueue({
+                  finishReason: { raw: "aborted", unified: "other" },
                   type: "finish",
-                  finishReason: { unified: "other", raw: "aborted" },
                   usage: mapUsage(rawUsage),
                 });
                 closeController();
@@ -576,7 +584,9 @@ function createZAIModel(modelId: string): LanguageModelV4 {
               }
 
               const { done, value } = await reader.read();
-              if (done) break;
+              if (done) {
+                break;
+              }
 
               const text =
                 typeof value === "string" ? value : decoder.decode(value);
@@ -595,30 +605,34 @@ function createZAIModel(modelId: string): LanguageModelV4 {
                 }
 
                 const choice = chunk.choices?.[0];
-                if (!choice) continue;
+                if (!choice) {
+                  continue;
+                }
 
                 if (choice.finish_reason) {
                   rawFinishReason = choice.finish_reason;
                 }
 
-                const delta = choice.delta;
-                if (!delta) continue;
+                const { delta } = choice;
+                if (!delta) {
+                  continue;
+                }
 
                 if (delta.reasoning_content) {
                   startReasoning();
                   controller.enqueue({
-                    type: "reasoning-delta",
-                    id: "r1",
                     delta: delta.reasoning_content,
+                    id: "r1",
+                    type: "reasoning-delta",
                   });
                 }
 
                 if (delta.content) {
                   startText();
                   controller.enqueue({
-                    type: "text-delta",
-                    id: textId,
                     delta: delta.content,
+                    id: textId,
+                    type: "text-delta",
                   });
                 }
 
@@ -629,9 +643,9 @@ function createZAIModel(modelId: string): LanguageModelV4 {
 
                     if (!accumulator) {
                       accumulator = {
+                        arguments: "",
                         id: buildToolCallId(index, toolCall.id),
                         name: toolCall.function?.name ?? "",
-                        arguments: "",
                         started: false,
                       };
                       toolAccumulators.set(index, accumulator);
@@ -650,9 +664,9 @@ function createZAIModel(modelId: string): LanguageModelV4 {
                       endText();
                       endReasoning();
                       controller.enqueue({
-                        type: "tool-input-start",
                         id: accumulator.id,
                         toolName: accumulator.name,
+                        type: "tool-input-start",
                       });
                     }
 
@@ -660,9 +674,9 @@ function createZAIModel(modelId: string): LanguageModelV4 {
                       accumulator.arguments += toolCall.function.arguments;
                       if (accumulator.started) {
                         controller.enqueue({
-                          type: "tool-input-delta",
-                          id: accumulator.id,
                           delta: toolCall.function.arguments,
+                          id: accumulator.id,
+                          type: "tool-input-delta",
                         });
                       }
                     }
@@ -673,10 +687,10 @@ function createZAIModel(modelId: string): LanguageModelV4 {
           } catch (error) {
             endText();
             endReasoning();
-            controller.enqueue({ type: "error", error });
+            controller.enqueue({ error, type: "error" });
             controller.enqueue({
+              finishReason: { raw: "error", unified: "error" },
               type: "finish",
-              finishReason: { unified: "error", raw: "error" },
               usage: mapUsage(rawUsage),
             });
             closeController();
@@ -698,15 +712,19 @@ function createZAIModel(modelId: string): LanguageModelV4 {
 
       return { stream };
     },
+    modelId,
+    provider: "zai",
+    specificationVersion: "v4",
+    supportedUrls: {},
   };
 }
 
 export function createZAIProvider() {
   return {
-    languageModel(modelId: string) {
+    chatModel(modelId: string) {
       return createZAIModel(modelId);
     },
-    chatModel(modelId: string) {
+    languageModel(modelId: string) {
       return createZAIModel(modelId);
     },
   };

@@ -184,7 +184,9 @@ const PurePreviewMessage = ({
           dir="auto"
           key={key}
         >
-          <MessageResponse dir="auto">{sanitizeText(part.text)}</MessageResponse>
+          <MessageResponse dir="auto">
+            {sanitizeText(part.text)}
+          </MessageResponse>
         </MessageContent>
       );
     }

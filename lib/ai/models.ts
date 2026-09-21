@@ -50,16 +50,14 @@ export const chatModels: ChatModel[] = [
 
 // Static capability map resolved locally — no external gateway calls needed.
 export const modelCapabilities: Record<string, ModelCapabilities> = {
-  "glm-4.6": { reasoning: true, tools: true, vision: true },
+  "glm-4-flash": { reasoning: false, tools: true, vision: false },
   "glm-4.5": { reasoning: false, tools: true, vision: true },
   "glm-4.5-air": { reasoning: false, tools: true, vision: false },
-  "glm-4-flash": { reasoning: false, tools: true, vision: false },
+  "glm-4.6": { reasoning: true, tools: true, vision: true },
 };
 
-export async function getCapabilities(): Promise<
-  Record<string, ModelCapabilities>
-> {
-  return modelCapabilities;
+export function getCapabilities(): Promise<Record<string, ModelCapabilities>> {
+  return Promise.resolve(modelCapabilities);
 }
 
 export const isDemo = process.env.IS_DEMO === "1";
@@ -68,17 +66,17 @@ export type GatewayModelWithCapabilities = ChatModel & {
   capabilities: ModelCapabilities;
 };
 
-export async function getAllGatewayModels(): Promise<
-  GatewayModelWithCapabilities[]
-> {
-  return chatModels.map((model) => ({
-    ...model,
-    capabilities: modelCapabilities[model.id] ?? {
-      reasoning: false,
-      tools: false,
-      vision: false,
-    },
-  }));
+export function getAllGatewayModels(): Promise<GatewayModelWithCapabilities[]> {
+  return Promise.resolve(
+    chatModels.map((model) => ({
+      ...model,
+      capabilities: modelCapabilities[model.id] ?? {
+        reasoning: false,
+        tools: false,
+        vision: false,
+      },
+    }))
+  );
 }
 
 export function getActiveModels(): ChatModel[] {
@@ -100,8 +98,8 @@ export const modelsByProvider = chatModels.reduce(
 
 export type ModelAvailability = "healthy" | "impacted" | "unknown";
 
-export async function getModelAvailability(
+export function getModelAvailability(
   modelId: string
 ): Promise<ModelAvailability> {
-  return allowedModelIds.has(modelId) ? "healthy" : "unknown";
+  return Promise.resolve(allowedModelIds.has(modelId) ? "healthy" : "unknown");
 }

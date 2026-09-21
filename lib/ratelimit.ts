@@ -19,9 +19,11 @@ function sweepExpiredBuckets() {
   }
 }
 
-export async function checkIpRateLimit(ip: string | undefined) {
+// Async signature kept intentionally: a Redis-backed limiter can replace the
+// in-memory implementation without any changes at call sites.
+export function checkIpRateLimit(ip: string | undefined): Promise<void> {
   if (!isProductionEnvironment || !ip) {
-    return;
+    return Promise.resolve();
   }
 
   const now = Date.now();
@@ -31,12 +33,14 @@ export async function checkIpRateLimit(ip: string | undefined) {
 
   if (!bucket || bucket.resetAt <= now) {
     buckets.set(ip, { count: 1, resetAt: now + TTL_MS });
-    return;
+    return Promise.resolve();
   }
 
   bucket.count += 1;
 
   if (bucket.count > MAX_MESSAGES) {
-    throw new ChatbotError("rate_limit:chat");
+    return Promise.reject(new ChatbotError("rate_limit:chat"));
   }
+
+  return Promise.resolve();
 }
