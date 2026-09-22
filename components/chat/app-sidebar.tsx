@@ -14,6 +14,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
+import { ShortcutsDialog } from "@/components/chat/shortcuts-dialog";
 import {
   getChatHistoryPaginationKey,
   SidebarHistory,
@@ -202,6 +203,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ShortcutsDialog />
     </>
   );
 }

@@ -63,6 +63,16 @@ export default function RootLayout({
             __html: THEME_COLOR_SCRIPT,
           }}
         />
+        <link href="https://fonts.googleapis.com" rel="preconnect" />
+        <link
+          crossOrigin="anonymous"
+          href="https://fonts.gstatic.com"
+          rel="preconnect"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body className="antialiased">
         <ThemeProvider

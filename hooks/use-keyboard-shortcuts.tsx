@@ -21,6 +21,7 @@ function isEditableTarget(target: KeyboardEvent["target"]): boolean {
  * - Ctrl/Cmd + Shift + O  → start a new chat
  * - Ctrl/Cmd + K          → focus the sidebar chat search
  * - Ctrl/Cmd + B          → toggle sidebar
+ * - Ctrl/Cmd + /          → open the keyboard shortcuts dialog
  */
 export function useKeyboardShortcuts() {
   const router = useRouter();
@@ -43,6 +44,12 @@ export function useKeyboardShortcuts() {
       if (!event.shiftKey && event.key.toLowerCase() === "k") {
         event.preventDefault();
         window.dispatchEvent(new Event("drs:focus-chat-search"));
+        return;
+      }
+
+      if (!event.shiftKey && event.key === "/") {
+        event.preventDefault();
+        window.dispatchEvent(new Event("drs:show-shortcuts"));
         return;
       }
 

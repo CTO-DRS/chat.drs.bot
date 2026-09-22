@@ -153,6 +153,14 @@
     text-rendering: optimizeLegibility;
     @apply bg-background text-foreground;
   }
+
+  /* Arabic typography: dedicated font + no negative tracking (breaks Arabic joining) */
+  html[lang="ar"] body {
+    font-family:
+      "IBM Plex Sans Arabic", "Noto Sans Arabic", ui-sans-serif, system-ui,
+      -apple-system, "Segoe UI", sans-serif;
+    letter-spacing: 0;
+  }
 }
 
 @layer base {
@@ -183,6 +191,16 @@
   h6 {
     line-height: 1.2;
     letter-spacing: -0.025em;
+  }
+
+  /* After the generic heading rule: cancel negative tracking for Arabic */
+  html[lang="ar"] h1,
+  html[lang="ar"] h2,
+  html[lang="ar"] h3,
+  html[lang="ar"] h4,
+  html[lang="ar"] h5,
+  html[lang="ar"] h6 {
+    letter-spacing: 0;
   }
 
   p {

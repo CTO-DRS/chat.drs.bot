@@ -21,7 +21,7 @@ export function GET(request: Request) {
       status: "ok",
       timestamp: new Date().toISOString(),
       uptimeSeconds: Math.round(process.uptime()),
-      version: "3.1.0",
+      version: "3.2.0",
     });
   } catch (error) {
     return Response.json(

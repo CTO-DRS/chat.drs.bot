@@ -35,9 +35,23 @@ const en: Dictionary = {
   // Header / export
   "header.exportMarkdown": "Export as Markdown",
   "input.editPlaceholder": "Edit your message...",
+  "input.listening": "Listening...",
 
   // Input
   "input.placeholder": "Ask anything...",
+  "input.voice": "Voice input",
+  "input.voiceError": "Voice recognition failed, please try again.",
+  "input.voicePermission": "Please allow microphone access to use voice input.",
+  "input.voiceUnsupported": "Voice input is not supported in this browser.",
+  "shortcuts.escToClose": "Press Esc to close",
+  "shortcuts.newChat": "New chat",
+  "shortcuts.search": "Search chats",
+  "shortcuts.showHelp": "Show shortcuts",
+  "shortcuts.subtitle": "Move faster with these keyboard combos.",
+
+  // Shortcuts
+  "shortcuts.title": "Keyboard shortcuts",
+  "shortcuts.toggleSidebar": "Toggle sidebar",
   "sidebar.deleteAll": "Delete all",
   "sidebar.emptyHistory":
     "Your conversations will appear here once you start chatting!",
@@ -80,6 +94,7 @@ const en: Dictionary = {
   "usernav.guest": "Guest",
   "usernav.language": "العربية",
   "usernav.login": "Login to your account",
+  "usernav.shortcuts": "Keyboard shortcuts",
   "usernav.signOut": "Sign out",
   "usernav.toggleTheme": "Toggle theme",
 
@@ -111,9 +126,24 @@ const ar: Dictionary = {
   // Header / export
   "header.exportMarkdown": "تصدير كـ Markdown",
   "input.editPlaceholder": "عدّل رسالتك...",
+  "input.listening": "جارٍ الاستماع...",
 
   // Input
   "input.placeholder": "اسأل عن أي شيء...",
+  "input.voice": "إدخال صوتي",
+  "input.voiceError": "تعذّر التعرف على الصوت، حاول مرة أخرى.",
+  "input.voicePermission":
+    "يرجى السماح بالوصول إلى الميكروفون لاستخدام الإدخال الصوتي.",
+  "input.voiceUnsupported": "الإدخال الصوتي غير مدعوم في هذا المتصفح.",
+  "shortcuts.escToClose": "اضغط Esc للإغلاق",
+  "shortcuts.newChat": "محادثة جديدة",
+  "shortcuts.search": "البحث في المحادثات",
+  "shortcuts.showHelp": "عرض الاختصارات",
+  "shortcuts.subtitle": "تنقّل بسرعة أكبر باستخدام هذه الاختصارات.",
+
+  // Shortcuts
+  "shortcuts.title": "اختصارات لوحة المفاتيح",
+  "shortcuts.toggleSidebar": "إظهار/إخفاء الشريط الجانبي",
   "sidebar.deleteAll": "حذف الكل",
   "sidebar.emptyHistory": "ستظهر محادثاتك هنا بمجرد بدء الدردشة!",
   "sidebar.history": "السجل",
@@ -155,6 +185,7 @@ const ar: Dictionary = {
   "usernav.guest": "ضيف",
   "usernav.language": "English",
   "usernav.login": "تسجيل الدخول",
+  "usernav.shortcuts": "اختصارات لوحة المفاتيح",
   "usernav.signOut": "تسجيل الخروج",
   "usernav.toggleTheme": "تبديل المظهر",
 

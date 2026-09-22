@@ -64,6 +64,7 @@ import {
 } from "./slash-commands";
 import { SuggestedActions } from "./suggested-actions";
 import type { VisibilityType } from "./visibility-selector";
+import { VoiceInputButton } from "./voice-input-button";
 
 function setCookie(name: string, value: string) {
   const maxAge = 60 * 60 * 24 * 365;
@@ -381,6 +382,13 @@ function PureMultimodalInput({
     return () => textarea.removeEventListener("paste", handlePaste);
   }, [handlePaste]);
 
+  const handleVoiceTranscript = useCallback(
+    (text: string) => {
+      setInput(text);
+    },
+    [setInput]
+  );
+
   const handleCancelEditMouseDown = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
@@ -555,6 +563,10 @@ function PureMultimodalInput({
             <ModelSelectorCompact
               onModelChange={onModelChange}
               selectedModelId={selectedModelId}
+            />
+            <VoiceInputButton
+              disabled={status !== "ready"}
+              onTranscript={handleVoiceTranscript}
             />
           </PromptInputTools>
 

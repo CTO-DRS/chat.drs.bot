@@ -38,6 +38,10 @@ export function SidebarUserNav({ user }: { user: User }) {
   const { t, toggleLocale } = useI18n();
 
   const isGuest = guestRegex.test(data?.user?.email ?? "");
+
+  const handleShowShortcuts = useCallback(() => {
+    window.dispatchEvent(new Event("drs:show-shortcuts"));
+  }, []);
   const handleThemeSelect = useCallback(() => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   }, [resolvedTheme, setTheme]);
@@ -114,6 +118,13 @@ export function SidebarUserNav({ user }: { user: User }) {
               onSelect={toggleLocale}
             >
               {t("usernav.language")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer text-[13px]"
+              data-testid="user-nav-item-shortcuts"
+              onSelect={handleShowShortcuts}
+            >
+              {t("usernav.shortcuts")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild data-testid="user-nav-item-auth">
