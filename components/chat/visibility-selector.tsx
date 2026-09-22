@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
   CheckCircleFillIcon,
@@ -57,6 +58,7 @@ function VisibilitySelectorItem({
   visibility: (typeof visibilities)[number];
   visibilityType: VisibilityType;
 }) {
+  const { t } = useI18n();
   const handleSelect = useCallback(() => {
     setVisibilityType(visibility.id);
     setOpen(false);
@@ -70,10 +72,10 @@ function VisibilitySelectorItem({
       onSelect={handleSelect}
     >
       <div className="flex flex-col items-start gap-1">
-        {visibility.label}
+        {t(`visibility.${visibility.id}`)}
         {visibility.description ? (
           <div className="text-muted-foreground text-xs">
-            {visibility.description}
+            {t(`visibility.${visibility.id}Description`)}
           </div>
         ) : null}
       </div>
@@ -98,6 +100,7 @@ export function VisibilitySelector({
     chatId,
     initialVisibilityType: selectedVisibilityType,
   });
+  const { t } = useI18n();
 
   const selectedVisibility = useMemo(
     () => visibilities.find((visibility) => visibility.id === visibilityType),
@@ -120,7 +123,9 @@ export function VisibilitySelector({
           variant="outline"
         >
           {selectedVisibility?.icon}
-          <span className="md:sr-only">{selectedVisibility?.label}</span>
+          <span className="md:sr-only">
+            {t(`visibility.${selectedVisibility?.id ?? "private"}`)}
+          </span>
           <ChevronDownIcon />
         </Button>
       </DropdownMenuTrigger>

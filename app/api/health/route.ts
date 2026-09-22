@@ -1,6 +1,6 @@
-import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import Database from "better-sqlite3";
 
 export function GET(request: Request) {
   // Reading request headers keeps this route dynamic (no static optimization)
@@ -15,20 +15,20 @@ export function GET(request: Request) {
     client.close();
 
     return Response.json({
-      status: "ok",
       database: "ok",
-      requestMarker: requestStart === "" ? "none" : "present",
-      uptimeSeconds: Math.round(process.uptime()),
       latencyMs: Date.now() - startedAt,
+      requestMarker: requestStart === "" ? "none" : "present",
+      status: "ok",
       timestamp: new Date().toISOString(),
+      uptimeSeconds: Math.round(process.uptime()),
       version: "3.1.0",
     });
   } catch (error) {
     return Response.json(
       {
-        status: "degraded",
         database: "error",
         error: error instanceof Error ? error.message : "unknown error",
+        status: "degraded",
         timestamp: new Date().toISOString(),
       },
       { status: 503 }

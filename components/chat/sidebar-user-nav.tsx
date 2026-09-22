@@ -19,6 +19,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { guestRegex } from "@/lib/constants";
+import { useI18n } from "@/lib/i18n";
 import { LoaderIcon } from "./icons";
 import { toast } from "./toast";
 
@@ -34,6 +35,7 @@ export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
   const { data, status } = useSession();
   const { setTheme, resolvedTheme } = useTheme();
+  const { t, toggleLocale } = useI18n();
 
   const isGuest = guestRegex.test(data?.user?.email ?? "");
   const handleThemeSelect = useCallback(() => {
@@ -88,9 +90,9 @@ export function SidebarUserNav({ user }: { user: User }) {
                   }}
                 />
                 <span className="truncate text-[13px]" data-testid="user-email">
-                  {isGuest ? "Guest" : user?.email}
+                  {isGuest ? t("usernav.guest") : user?.email}
                 </span>
-                <ChevronUp className="ml-auto size-3.5 text-sidebar-foreground/50" />
+                <ChevronUp className="ms-auto size-3.5 text-sidebar-foreground/50" />
               </SidebarMenuButton>
             )}
           </DropdownMenuTrigger>
@@ -104,7 +106,14 @@ export function SidebarUserNav({ user }: { user: User }) {
               data-testid="user-nav-item-theme"
               onSelect={handleThemeSelect}
             >
-              {`Toggle ${resolvedTheme === "light" ? "dark" : "light"} mode`}
+              {t("usernav.toggleTheme")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer text-[13px]"
+              data-testid="user-nav-item-language"
+              onSelect={toggleLocale}
+            >
+              {t("usernav.language")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild data-testid="user-nav-item-auth">
@@ -113,7 +122,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                 onClick={handleAuthClick}
                 type="button"
               >
-                {isGuest ? "Login to your account" : "Sign out"}
+                {isGuest ? t("usernav.login") : t("usernav.signOut")}
               </button>
             </DropdownMenuItem>
           </DropdownMenuContent>

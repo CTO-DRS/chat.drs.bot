@@ -26,6 +26,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { Chat } from "@/lib/db/schema";
+import { useI18n } from "@/lib/i18n";
 import { fetcher } from "@/lib/utils";
 import { LoaderIcon } from "./icons";
 import { ChatItem } from "./sidebar-history-item";
@@ -101,6 +102,7 @@ export function getChatHistoryPaginationKey(
 
 export function SidebarHistory({ user }: { user: User | undefined }) {
   const { setOpenMobile } = useSidebar();
+  const { t } = useI18n();
   const pathname = usePathname();
   const id = pathname?.startsWith("/chat/") ? pathname.split("/")[2] : null;
   const [searchQuery, setSearchQuery] = useState("");
@@ -154,8 +156,8 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
       { method: "DELETE" }
     );
 
-    toast.success("Chat deleted");
-  }, [deleteId, mutate, pathname, router]);
+    toast.success(t("toast.chatDeleted"));
+  }, [deleteId, mutate, pathname, router, t]);
 
   const handleShowDeleteDialog = useCallback((chatId: string) => {
     setDeleteId(chatId);
@@ -213,7 +215,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
         <SidebarGroupContent>
           <div className="flex w-full flex-row items-center justify-center gap-2 px-2 text-[13px] text-sidebar-foreground/60">
-            Login to save and revisit previous chats!
+            {t("sidebar.loginToSave")}
           </div>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -224,7 +226,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     return (
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
         <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/70">
-          History
+          {t("sidebar.history")}
         </SidebarGroupLabel>
         <SidebarGroupContent>
           <div className="flex flex-col gap-0.5 px-1">
@@ -253,11 +255,11 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     return (
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
         <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/70">
-          History
+          {t("sidebar.history")}
         </SidebarGroupLabel>
         <SidebarGroupContent>
           <div className="flex w-full flex-row items-center justify-center gap-2 px-2 text-[13px] text-sidebar-foreground/60">
-            Your conversations will appear here once you start chatting!
+            {t("sidebar.emptyHistory")}
           </div>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -268,17 +270,17 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     <>
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
         <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/70">
-          History
+          {t("sidebar.history")}
         </SidebarGroupLabel>
         <SidebarGroupContent>
           <div className="relative mb-2 px-1">
-            <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-3.5 -translate-y-1/2 text-sidebar-foreground/40" />
+            <SearchIcon className="pointer-events-none absolute start-3.5 top-1/2 size-3.5 -translate-y-1/2 text-sidebar-foreground/40" />
             <input
               aria-label="Search chats"
-              className="h-8 w-full rounded-lg border border-sidebar-border bg-background/60 pl-8 pr-7 text-[13px] text-sidebar-foreground outline-none transition-colors placeholder:text-sidebar-foreground/40 focus:border-sidebar-foreground/30 focus:bg-background"
+              className="h-8 w-full rounded-lg border border-sidebar-border bg-background/60 ps-8 pe-7 text-[13px] text-sidebar-foreground outline-none transition-colors placeholder:text-sidebar-foreground/40 focus:border-sidebar-foreground/30 focus:bg-background"
               data-testid="chat-search-input"
               onChange={handleSearchChange}
-              placeholder="Search chats..."
+              placeholder={t("sidebar.searchChats")}
               ref={searchInputRef}
               type="text"
               value={searchQuery}
@@ -286,7 +288,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
             {isSearching ? (
               <button
                 aria-label="Clear search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 transition-colors hover:text-sidebar-foreground"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 transition-colors hover:text-sidebar-foreground"
                 onClick={handleClearSearch}
                 type="button"
               >
@@ -302,7 +304,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                   if (isSearching && filteredChats.length === 0) {
                     return (
                       <div className="flex w-full flex-row items-center justify-center gap-2 px-2 py-6 text-[13px] text-sidebar-foreground/60">
-                        No chats matching “{searchQuery.trim()}”
+                        {t("sidebar.noResults")} “{searchQuery.trim()}”
                       </div>
                     );
                   }
@@ -312,7 +314,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                       {groupedChats.today.length > 0 && (
                         <div>
                           <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/70">
-                            Today
+                            {t("sidebar.today")}
                           </div>
                           {groupedChats.today.map((chat) => (
                             <ChatItem
@@ -329,7 +331,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                       {groupedChats.yesterday.length > 0 && (
                         <div>
                           <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/70">
-                            Yesterday
+                            {t("sidebar.yesterday")}
                           </div>
                           {groupedChats.yesterday.map((chat) => (
                             <ChatItem
@@ -346,7 +348,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                       {groupedChats.lastWeek.length > 0 && (
                         <div>
                           <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/70">
-                            Last 7 days
+                            {t("sidebar.last7Days")}
                           </div>
                           {groupedChats.lastWeek.map((chat) => (
                             <ChatItem
@@ -363,7 +365,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                       {groupedChats.lastMonth.length > 0 && (
                         <div>
                           <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/70">
-                            Last 30 days
+                            {t("sidebar.last30Days")}
                           </div>
                           {groupedChats.lastMonth.map((chat) => (
                             <ChatItem
@@ -380,7 +382,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                       {groupedChats.older.length > 0 && (
                         <div>
                           <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/70">
-                            Older
+                            {t("sidebar.older")}
                           </div>
                           {groupedChats.older.map((chat) => (
                             <ChatItem
@@ -406,7 +408,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
               <div className="animate-spin">
                 <LoaderIcon />
               </div>
-              <div className="text-[11px]">Loading...</div>
+              <div className="text-[11px]">{t("sidebar.loading")}</div>
             </div>
           )}
         </SidebarGroupContent>
@@ -415,16 +417,15 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
       <AlertDialog onOpenChange={setShowDeleteDialog} open={showDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialog.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              chat and remove it from our servers.
+              {t("dialog.deleteDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("dialog.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>
-              Continue
+              {t("dialog.deleteConfirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

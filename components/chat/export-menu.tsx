@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useI18n } from "@/lib/i18n";
 
 type ExportMessage = {
   id?: string;
@@ -93,6 +94,7 @@ function slugifyTitle(title: string): string {
 
 export function ExportMenu({ chatId }: { chatId: string }) {
   const [isExporting, setIsExporting] = useState(false);
+  const { t } = useI18n();
 
   const handleExport = useCallback(
     async (format: "markdown" | "json") => {
@@ -162,11 +164,11 @@ export function ExportMenu({ chatId }: { chatId: string }) {
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem onClick={handleExportMarkdown}>
           <FileTextIcon className="size-4" />
-          Export as Markdown
+          {t("header.exportMarkdown")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleExportJson}>
           <FileJsonIcon className="size-4" />
-          Export as JSON
+          {t("header.exportJson")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

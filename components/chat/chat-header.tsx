@@ -38,7 +38,7 @@ function PureChatHeader({
         </span>
       </div>
 
-      <div className="ml-auto flex items-center gap-1.5">
+      <div className="ms-auto flex items-center gap-1.5">
         {!isReadonly && (
           <VisibilitySelector
             chatId={chatId}

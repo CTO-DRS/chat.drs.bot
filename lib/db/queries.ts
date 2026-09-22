@@ -7,6 +7,7 @@ import {
   and,
   asc,
   count,
+  countDistinct,
   desc,
   eq,
   gt,
@@ -593,6 +594,147 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
       .execute();
 
     return streamIds.map(({ id }) => id);
+  } catch (error) {
+    throw new ChatbotError("bad_request:database", { cause: error });
+  }
+}
+
+export type DailyActivity = {
+  date: string;
+  chats: number;
+  messages: number;
+};
+
+export type UsageStats = {
+  totals: {
+    chats: number;
+    messages: number;
+    userMessages: number;
+    documents: number;
+    votes: number;
+    upvotes: number;
+  };
+  activity: DailyActivity[];
+  mostRecentChat: {
+    id: string;
+    title: string;
+    createdAt: Date;
+  } | null;
+  accountSince: Date | null;
+};
+
+function localDateKey(date: Date): string {
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+export async function getUsageStats({ id }: { id: string }) {
+  try {
+    const sevenDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const [chatsRes] = await db
+      .select({ count: count(chat.id) })
+      .from(chat)
+      .where(eq(chat.userId, id))
+      .execute();
+
+    const [messagesRes] = await db
+      .select({ count: count(message.id) })
+      .from(message)
+      .innerJoin(chat, eq(message.chatId, chat.id))
+      .where(eq(chat.userId, id))
+      .execute();
+
+    const [userMessagesRes] = await db
+      .select({ count: count(message.id) })
+      .from(message)
+      .innerJoin(chat, eq(message.chatId, chat.id))
+      .where(and(eq(chat.userId, id), eq(message.role, "user")))
+      .execute();
+
+    const [documentsRes] = await db
+      .select({ count: countDistinct(document.id) })
+      .from(document)
+      .where(eq(document.userId, id))
+      .execute();
+
+    const [votesRes] = await db
+      .select({ count: count(vote.messageId) })
+      .from(vote)
+      .innerJoin(chat, eq(vote.chatId, chat.id))
+      .where(eq(chat.userId, id))
+      .execute();
+
+    const [upvotesRes] = await db
+      .select({ count: count(vote.messageId) })
+      .from(vote)
+      .innerJoin(chat, eq(vote.chatId, chat.id))
+      .where(and(eq(chat.userId, id), eq(vote.isUpvoted, true)))
+      .execute();
+
+    const recentChatsRows = await db
+      .select({ createdAt: chat.createdAt })
+      .from(chat)
+      .where(and(eq(chat.userId, id), gte(chat.createdAt, sevenDaysAgo)))
+      .execute();
+
+    const recentMessagesRows = await db
+      .select({ createdAt: message.createdAt })
+      .from(message)
+      .innerJoin(chat, eq(message.chatId, chat.id))
+      .where(and(eq(chat.userId, id), gte(message.createdAt, sevenDaysAgo)))
+      .execute();
+
+    const activity: DailyActivity[] = [];
+    for (let offset = 6; offset >= 0; offset -= 1) {
+      const day = new Date(Date.now() - offset * 24 * 60 * 60 * 1000);
+      const key = localDateKey(day);
+      activity.push({
+        chats: recentChatsRows.filter(
+          (row) => localDateKey(new Date(row.createdAt)) === key
+        ).length,
+        date: key,
+        messages: recentMessagesRows.filter(
+          (row) => localDateKey(new Date(row.createdAt)) === key
+        ).length,
+      });
+    }
+
+    const [mostRecent] = await db
+      .select({
+        createdAt: chat.createdAt,
+        id: chat.id,
+        title: chat.title,
+      })
+      .from(chat)
+      .where(eq(chat.userId, id))
+      .orderBy(desc(chat.createdAt))
+      .limit(1)
+      .execute();
+
+    const [firstChat] = await db
+      .select({ createdAt: chat.createdAt })
+      .from(chat)
+      .where(eq(chat.userId, id))
+      .orderBy(asc(chat.createdAt))
+      .limit(1)
+      .execute();
+
+    return {
+      accountSince: firstChat?.createdAt ?? null,
+      activity,
+      mostRecentChat: mostRecent ?? null,
+      totals: {
+        chats: chatsRes?.count ?? 0,
+        documents: documentsRes?.count ?? 0,
+        messages: messagesRes?.count ?? 0,
+        upvotes: upvotesRes?.count ?? 0,
+        userMessages: userMessagesRes?.count ?? 0,
+        votes: votesRes?.count ?? 0,
+      },
+    } satisfies UsageStats;
   } catch (error) {
     throw new ChatbotError("bad_request:database", { cause: error });
   }

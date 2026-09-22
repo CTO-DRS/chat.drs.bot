@@ -97,7 +97,7 @@ function SlashCommandMenuItem({
   return (
     <button
       className={cn(
-        "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors",
+        "flex w-full items-center gap-3 px-4 py-2.5 text-start transition-colors",
         index === selectedIndex ? "bg-muted/70" : "hover:bg-muted/40"
       )}
       data-selected={index === selectedIndex}
@@ -113,7 +113,7 @@ function SlashCommandMenuItem({
         {cmd.description}
       </span>
       {cmd.shortcut ? (
-        <span className="ml-auto text-[11px] text-muted-foreground/30">
+        <span className="ms-auto text-[11px] text-muted-foreground/30">
           {cmd.shortcut}
         </span>
       ) : null}
@@ -145,7 +145,7 @@ export function SlashCommandMenu({
 
   return (
     <div
-      className="absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-xl border border-border/50 bg-card/95 shadow-[var(--shadow-float)] backdrop-blur-xl"
+      className="absolute bottom-full inset-x-0 z-50 mb-2 overflow-hidden rounded-xl border border-border/50 bg-card/95 shadow-[var(--shadow-float)] backdrop-blur-xl"
       ref={menuRef}
     >
       <div className="px-4 py-2.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/40">

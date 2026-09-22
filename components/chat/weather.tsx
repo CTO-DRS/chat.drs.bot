@@ -368,7 +368,7 @@ export function Weather({
             </div>
           </div>
 
-          <div className="text-right">
+          <div className="text-end">
             <div className="font-medium text-white/90 text-xs">
               H: {n(currentHigh)}°
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ChartColumnIcon,
   MessageSquareIcon,
   PanelLeftIcon,
   PenSquareIcon,
@@ -33,6 +34,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useI18n } from "@/lib/i18n";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,6 +51,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
   const router = useRouter();
   const { setOpenMobile, toggleSidebar } = useSidebar();
   const { mutate } = useSWRConfig();
+  const { t } = useI18n();
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
   useKeyboardShortcuts();
 
@@ -69,6 +72,11 @@ export function AppSidebar({ user }: { user: User | undefined }) {
     setShowDeleteAllDialog(true);
   }, []);
 
+  const handleOpenStats = useCallback(() => {
+    setOpenMobile(false);
+    router.push("/stats");
+  }, [router, setOpenMobile]);
+
   const handleDeleteAll = useCallback(() => {
     setShowDeleteAllDialog(false);
     router.replace("/");
@@ -80,8 +88,8 @@ export function AppSidebar({ user }: { user: User | undefined }) {
       method: "DELETE",
     });
 
-    toast.success("All chats deleted");
-  }, [mutate, router]);
+    toast.success(t("toast.allChatsDeleted"));
+  }, [mutate, router, t]);
 
   return (
     <>
@@ -130,23 +138,39 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                     tooltip="New Chat (Ctrl+Shift+O)"
                   >
                     <PenSquareIcon className="size-4" />
-                    <span className="font-medium">New chat</span>
-                    <kbd className="pointer-events-none ml-auto hidden rounded border border-sidebar-border bg-sidebar-accent/60 px-1.5 py-0.5 text-[10px] font-medium text-sidebar-foreground/50 md:inline-block">
+                    <span className="font-medium">{t("sidebar.newChat")}</span>
+                    <kbd className="pointer-events-none ms-auto hidden rounded border border-sidebar-border bg-sidebar-accent/60 px-1.5 py-0.5 text-[10px] font-medium text-sidebar-foreground/50 md:inline-block">
                       Ctrl+Shift+O
                     </kbd>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 {user ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      className="rounded-lg text-sidebar-foreground/40 transition-colors duration-150 hover:bg-destructive/10 hover:text-destructive"
-                      onClick={handleShowDeleteAllDialog}
-                      tooltip="Delete All Chats"
-                    >
-                      <TrashIcon className="size-4" />
-                      <span className="text-[13px]">Delete all</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        className="h-8 rounded-lg text-sidebar-foreground/70 transition-colors duration-150 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                        onClick={handleOpenStats}
+                        tooltip="Usage stats"
+                      >
+                        <ChartColumnIcon className="size-4" />
+                        <span className="text-[13px]">
+                          {t("sidebar.stats")}
+                        </span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        className="rounded-lg text-sidebar-foreground/40 transition-colors duration-150 hover:bg-destructive/10 hover:text-destructive"
+                        onClick={handleShowDeleteAllDialog}
+                        tooltip="Delete All Chats"
+                      >
+                        <TrashIcon className="size-4" />
+                        <span className="text-[13px]">
+                          {t("sidebar.deleteAll")}
+                        </span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
                 ) : null}
               </SidebarMenu>
             </SidebarGroupContent>
@@ -165,16 +189,15 @@ export function AppSidebar({ user }: { user: User | undefined }) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete all chats?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialog.deleteAllTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete all
-              your chats and remove them from our servers.
+              {t("dialog.deleteAllDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("dialog.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteAll}>
-              Delete All
+              {t("dialog.deleteAllConfirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
