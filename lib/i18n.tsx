@@ -99,7 +99,10 @@ const en: Dictionary = {
   "usernav.login": "Login to your account",
   "usernav.shortcuts": "Keyboard shortcuts",
   "usernav.signOut": "Sign out",
-  "usernav.toggleTheme": "Toggle theme",
+  "usernav.theme": "Theme",
+  "usernav.themeDark": "Dark",
+  "usernav.themeLight": "Light",
+  "usernav.themeSystem": "System (auto)",
 
   // Visibility
   "visibility.private": "Private",
@@ -193,7 +196,10 @@ const ar: Dictionary = {
   "usernav.login": "تسجيل الدخول",
   "usernav.shortcuts": "اختصارات لوحة المفاتيح",
   "usernav.signOut": "تسجيل الخروج",
-  "usernav.toggleTheme": "تبديل المظهر",
+  "usernav.theme": "المظهر",
+  "usernav.themeDark": "داكن",
+  "usernav.themeLight": "فاتح",
+  "usernav.themeSystem": "حسب النظام (تلقائي)",
 
   // Visibility
   "visibility.private": "خاص",

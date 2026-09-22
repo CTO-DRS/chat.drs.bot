@@ -1,16 +1,21 @@
 "use client";
 
-import { ChevronUp } from "lucide-react";
+import { ChevronUp, Monitor, Moon, Sun, SunMoon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -34,17 +39,27 @@ function emailToHue(email: string): number {
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
   const { data, status } = useSession();
-  const { setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme, theme } = useTheme();
   const { t, toggleLocale } = useI18n();
 
   const isGuest = guestRegex.test(data?.user?.email ?? "");
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const ThemeIcon = mounted
+    ? theme === "system"
+      ? Monitor
+      : resolvedTheme === "dark"
+        ? Moon
+        : Sun
+    : SunMoon;
+
   const handleShowShortcuts = useCallback(() => {
     window.dispatchEvent(new Event("drs:show-shortcuts"));
   }, []);
-  const handleThemeSelect = useCallback(() => {
-    setTheme(resolvedTheme === "dark" ? "light" : "dark");
-  }, [resolvedTheme, setTheme]);
 
   const handleAuthClick = useCallback(() => {
     if (status === "loading") {
@@ -105,13 +120,43 @@ export function SidebarUserNav({ user }: { user: User }) {
             data-testid="user-nav-menu"
             side="top"
           >
-            <DropdownMenuItem
-              className="cursor-pointer text-[13px]"
-              data-testid="user-nav-item-theme"
-              onSelect={handleThemeSelect}
-            >
-              {t("usernav.toggleTheme")}
-            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger
+                className="cursor-pointer text-[13px]"
+                data-testid="user-nav-item-theme"
+              >
+                <ThemeIcon className="size-4" />
+                {t("usernav.theme")}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="rounded-lg">
+                <DropdownMenuRadioGroup
+                  onValueChange={setTheme}
+                  value={mounted ? (theme ?? "system") : "system"}
+                >
+                  <DropdownMenuRadioItem
+                    className="cursor-pointer text-[13px]"
+                    data-testid="theme-item-light"
+                    value="light"
+                  >
+                    {t("usernav.themeLight")}
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem
+                    className="cursor-pointer text-[13px]"
+                    data-testid="theme-item-dark"
+                    value="dark"
+                  >
+                    {t("usernav.themeDark")}
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem
+                    className="cursor-pointer text-[13px]"
+                    data-testid="theme-item-system"
+                    value="system"
+                  >
+                    {t("usernav.themeSystem")}
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuItem
               className="cursor-pointer text-[13px]"
               data-testid="user-nav-item-language"
