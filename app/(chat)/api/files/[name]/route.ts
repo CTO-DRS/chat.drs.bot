@@ -4,11 +4,16 @@ import path from "node:path";
 const UPLOAD_DIR = path.join(process.cwd(), "upload");
 
 const CONTENT_TYPES: Record<string, string> = {
+  ".docx":
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ".gif": "image/gif",
   ".jpeg": "image/jpeg",
   ".jpg": "image/jpeg",
+  ".markdown": "text/markdown; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
   ".pdf": "application/pdf",
   ".png": "image/png",
+  ".txt": "text/plain; charset=utf-8",
   ".webp": "image/webp",
 };
 

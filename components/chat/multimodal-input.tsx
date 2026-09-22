@@ -246,17 +246,25 @@ function PureMultimodalInput({
       `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/chat/${chatId}`
     );
 
-    // PDFs carry their server-extracted text as context so every model can read them.
-    const pdfContextParts = attachments
+    // Documents (PDF/TXT/MD/DOCX) carry their server-extracted text as context
+    // so every model can read them, vision-capable or not.
+    const documentContextParts = attachments
       .filter(
         (attachment) =>
-          attachment.contentType === "application/pdf" &&
-          attachment.extractedText
+          Boolean(attachment.extractedText) &&
+          !attachment.contentType.startsWith("image/")
       )
-      .map((attachment) => ({
-        text: `The user attached the PDF document "${attachment.name}". Its extracted content is between the markers below.\n\n<pdf-content name="${attachment.name}">\n${attachment.extractedText}\n</pdf-content>`,
-        type: "text" as const,
-      }));
+      .map((attachment) => {
+        const tagName =
+          attachment.contentType === "application/pdf"
+            ? "pdf-content"
+            : "document-content";
+
+        return {
+          text: `The user attached the document "${attachment.name}". Its extracted content is between the markers below.\n\n<${tagName} name="${attachment.name}">\n${attachment.extractedText}\n</${tagName}>`,
+          type: "text" as const,
+        };
+      });
 
     sendMessage({
       parts: [
@@ -266,7 +274,7 @@ function PureMultimodalInput({
           type: "file" as const,
           url: attachment.url,
         })),
-        ...pdfContextParts,
+        ...documentContextParts,
         {
           text: input,
           type: "text",
@@ -544,7 +552,7 @@ function PureMultimodalInput({
         )}
 
       <input
-        accept="image/*,application/pdf"
+        accept="image/*,application/pdf,.docx,.txt,.md,.markdown"
         className="pointer-events-none fixed -top-4 -left-4 size-0.5 opacity-0"
         multiple
         onChange={handleFileChange}
