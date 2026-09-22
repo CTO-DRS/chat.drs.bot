@@ -1,3 +1,4 @@
+import { FileTextIcon } from "lucide-react";
 import Image from "next/image";
 import type { Attachment } from "@/lib/types";
 import { Spinner } from "../ui/spinner";
@@ -13,6 +14,7 @@ export const PreviewAttachment = ({
   onRemove?: () => void;
 }) => {
   const { name, url, contentType } = attachment;
+  const isPdf = contentType === "application/pdf";
 
   return (
     <div
@@ -27,6 +29,19 @@ export const PreviewAttachment = ({
           src={url}
           width={96}
         />
+      ) : isPdf ? (
+        <div
+          className="flex size-full flex-col items-center justify-center gap-1 bg-card p-2 text-center"
+          title={name}
+        >
+          <FileTextIcon className="size-6 text-destructive/70" />
+          <span className="line-clamp-2 w-full break-all text-[9px] leading-tight text-muted-foreground">
+            {name}
+          </span>
+          <span className="rounded-sm bg-destructive/10 px-1 text-[8px] font-semibold text-destructive">
+            PDF
+          </span>
+        </div>
       ) : (
         <div className="flex size-full items-center justify-center text-muted-foreground text-xs">
           File

@@ -57,7 +57,9 @@ export type ChatMessage = UIMessage<
 >;
 
 export type Attachment = {
+  contentType: string;
+  /** Text extracted server-side for PDF attachments (used as model context). */
+  extractedText?: string;
   name: string;
   url: string;
-  contentType: string;
 };

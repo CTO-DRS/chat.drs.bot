@@ -150,6 +150,16 @@ function PureMultimodalInput({
   const [slashQuery, setSlashQuery] = useState("");
   const [slashIndex, setSlashIndex] = useState(0);
 
+  const { data: modelsData } = useSWR(
+    `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/models`,
+    (url: string) => fetch(url).then((r) => r.json()),
+    { dedupingInterval: 3_600_000, revalidateOnFocus: false }
+  );
+  const modelCapabilities: Record<string, ModelCapabilities> | undefined =
+    modelsData?.capabilities ?? modelsData;
+  const selectedModelHasVision =
+    modelCapabilities?.[selectedModelId]?.vision ?? false;
+
   const handleInput = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
       const val = event.target.value;
@@ -236,6 +246,18 @@ function PureMultimodalInput({
       `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/chat/${chatId}`
     );
 
+    // PDFs carry their server-extracted text as context so every model can read them.
+    const pdfContextParts = attachments
+      .filter(
+        (attachment) =>
+          attachment.contentType === "application/pdf" &&
+          attachment.extractedText
+      )
+      .map((attachment) => ({
+        text: `The user attached the PDF document "${attachment.name}". Its extracted content is between the markers below.\n\n<pdf-content name="${attachment.name}">\n${attachment.extractedText}\n</pdf-content>`,
+        type: "text" as const,
+      }));
+
     sendMessage({
       parts: [
         ...attachments.map((attachment) => ({
@@ -244,6 +266,7 @@ function PureMultimodalInput({
           type: "file" as const,
           url: attachment.url,
         })),
+        ...pdfContextParts,
         {
           text: input,
           type: "text",
@@ -285,10 +308,14 @@ function PureMultimodalInput({
 
       if (response.ok) {
         const data = await response.json();
-        const { url, pathname, contentType } = data;
+        const { extractedText, pathname, contentType, url } = data;
 
         return {
           contentType,
+          extractedText:
+            typeof extractedText === "string" && extractedText.length > 0
+              ? extractedText
+              : undefined,
           name: pathname,
           url,
         };
@@ -304,10 +331,29 @@ function PureMultimodalInput({
     async (event: ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files || []);
 
-      setUploadQueue(files.map((file) => file.name));
+      const attachable = files.filter((file) => {
+        if (file.type.startsWith("image/") && !selectedModelHasVision) {
+          return false;
+        }
+
+        return true;
+      });
+
+      const rejectedImages = files.length - attachable.length;
+
+      if (rejectedImages > 0) {
+        toast.error(t("input.visionRequired"));
+      }
+
+      if (attachable.length === 0) {
+        event.target.value = "";
+        return;
+      }
+
+      setUploadQueue(attachable.map((file) => file.name));
 
       try {
-        const uploadPromises = files.map((file) => uploadFile(file));
+        const uploadPromises = attachable.map((file) => uploadFile(file));
         const uploadedAttachments = await Promise.all(uploadPromises);
         const successfullyUploadedAttachments = uploadedAttachments.filter(
           (attachment) => attachment !== undefined
@@ -323,7 +369,7 @@ function PureMultimodalInput({
         setUploadQueue([]);
       }
     },
-    [setAttachments, uploadFile]
+    [setAttachments, uploadFile, selectedModelHasVision, t]
   );
 
   const handlePaste = useCallback(
@@ -338,6 +384,12 @@ function PureMultimodalInput({
       );
 
       if (imageItems.length === 0) {
+        return;
+      }
+
+      if (!selectedModelHasVision) {
+        event.preventDefault();
+        toast.error(t("input.visionRequired"));
         return;
       }
 
@@ -369,7 +421,7 @@ function PureMultimodalInput({
         setUploadQueue([]);
       }
     },
-    [setAttachments, uploadFile]
+    [setAttachments, uploadFile, selectedModelHasVision, t]
   );
 
   useEffect(() => {
@@ -492,6 +544,7 @@ function PureMultimodalInput({
         )}
 
       <input
+        accept="image/*,application/pdf"
         className="pointer-events-none fixed -top-4 -left-4 size-0.5 opacity-0"
         multiple
         onChange={handleFileChange}
@@ -555,11 +608,7 @@ function PureMultimodalInput({
         />
         <PromptInputFooter className="px-3 pb-3">
           <PromptInputTools>
-            <AttachmentsButton
-              fileInputRef={fileInputRef}
-              selectedModelId={selectedModelId}
-              status={status}
-            />
+            <AttachmentsButton fileInputRef={fileInputRef} status={status} />
             <ModelSelectorCompact
               onModelChange={onModelChange}
               selectedModelId={selectedModelId}
@@ -652,21 +701,12 @@ const AttachmentPreviewItem = memo(PureAttachmentPreviewItem);
 function PureAttachmentsButton({
   fileInputRef,
   status,
-  selectedModelId,
 }: {
   fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
   status: UseChatHelpers<ChatMessage>["status"];
-  selectedModelId: string;
 }) {
-  const { data: modelsResponse } = useSWR(
-    `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/models`,
-    (url: string) => fetch(url).then((r) => r.json()),
-    { dedupingInterval: 3_600_000, revalidateOnFocus: false }
-  );
+  const { t } = useI18n();
 
-  const caps: Record<string, ModelCapabilities> | undefined =
-    modelsResponse?.capabilities ?? modelsResponse;
-  const hasVision = caps?.[selectedModelId]?.vision ?? false;
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
@@ -676,20 +716,22 @@ function PureAttachmentsButton({
   );
 
   return (
-    <Button
-      className={cn(
-        "h-7 w-7 rounded-lg border border-border/40 p-1 transition-colors",
-        hasVision
-          ? "text-foreground hover:border-border hover:text-foreground"
-          : "text-muted-foreground/30 cursor-not-allowed"
-      )}
-      data-testid="attachments-button"
-      disabled={status !== "ready" || !hasVision}
-      onClick={handleClick}
-      variant="ghost"
-    >
-      <PaperclipIcon size={14} style={{ height: 14, width: 14 }} />
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          className="h-7 w-7 rounded-lg border border-border/40 p-1 text-foreground transition-colors hover:border-border hover:text-foreground"
+          data-testid="attachments-button"
+          disabled={status !== "ready"}
+          onClick={handleClick}
+          variant="ghost"
+        >
+          <PaperclipIcon size={14} style={{ height: 14, width: 14 }} />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top" sideOffset={8}>
+        {t("input.attach")}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

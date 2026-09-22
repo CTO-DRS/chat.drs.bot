@@ -4,9 +4,12 @@ import path from "node:path";
 const UPLOAD_DIR = path.join(process.cwd(), "upload");
 
 const CONTENT_TYPES: Record<string, string> = {
+  ".gif": "image/gif",
   ".jpeg": "image/jpeg",
   ".jpg": "image/jpeg",
+  ".pdf": "application/pdf",
   ".png": "image/png",
+  ".webp": "image/webp",
 };
 
 export async function GET(

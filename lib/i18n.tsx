@@ -34,11 +34,14 @@ const en: Dictionary = {
 
   // Header / export
   "header.exportMarkdown": "Export as Markdown",
+  "input.attach": "Attach files",
   "input.editPlaceholder": "Edit your message...",
   "input.listening": "Listening...",
 
   // Input
   "input.placeholder": "Ask anything...",
+  "input.visionRequired":
+    "The selected model does not support images. Switch to a vision model or attach a PDF instead.",
   "input.voice": "Voice input",
   "input.voiceError": "Voice recognition failed, please try again.",
   "input.voicePermission": "Please allow microphone access to use voice input.",
@@ -125,11 +128,14 @@ const ar: Dictionary = {
 
   // Header / export
   "header.exportMarkdown": "تصدير كـ Markdown",
+  "input.attach": "إرفاق ملفات",
   "input.editPlaceholder": "عدّل رسالتك...",
   "input.listening": "جارٍ الاستماع...",
 
   // Input
   "input.placeholder": "اسأل عن أي شيء...",
+  "input.visionRequired":
+    "النموذج المحدد لا يدعم الصور. بدّل إلى نموذج يدعم الرؤية أو أرفق ملف PDF بدلاً منه.",
   "input.voice": "إدخال صوتي",
   "input.voiceError": "تعذّر التعرف على الصوت، حاول مرة أخرى.",
   "input.voicePermission":
